@@ -17,7 +17,7 @@ def exportdata(db: Client, path: str) -> Dict[str, Any]:
     colls : List[CollectionReference] = ref.collections
 
 
-def importdata(search: str, db: Client):
+def searchquery(search: str, db: Client):
     path = search.split('/')
     path.pop(0)
     field = path.pop(-1).replace('[', '').replace(']', '')
@@ -88,7 +88,7 @@ def main():
     cmd.add_argument(
         'service_file', help='google cloud service account credentials .json file')
     cmd.add_argument('data_file', help='yaml data file for import or export')
-    cmd.add_argument('--export', help='perform export, if not present - import will be performed')
+#    cmd.add_argument('--export', help='perform export, if not present - import will be performed')
     if len(sys.argv) == 1:
         args = vars(cmd.parse_args(
         ['D:\\Projects\\schoosch-8e6d4-firebase-adminsdk-qtszm-5fcb843461.json', 'd:\\Projects\\schoosch\data\people.yml']))
@@ -102,15 +102,15 @@ def main():
     db: Client = firestore.client()
 
     with open(args['data_file'], encoding='utf8') as data_file:
-        if args['--export']:
-            export = exportdata(db)
-            file = open(data_file)
-            yaml.dump(export, file)
-            
-        else:
+#        if args['--export']:
+#            export = exportdata(db)
+#            file = open(data_file)
+#            yaml.dump(export, file)
+#            
+#        else:
             doc: Dict[str, Any] = yaml.safe_load(data_file)
 
-    importdata(doc, db)
+    processdata(doc, db)
 
 
 if __name__ == '__main__':
