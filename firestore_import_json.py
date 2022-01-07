@@ -14,7 +14,7 @@ import argparse
 
 import firebase_admin
 
-def exportdata(map: Dict[str, Any], ref: Union[Client, DocumentReference]):
+def exportdata(map: Dict[str, Any], ref: Union[Client, DocumentReference], noid: bool):
     collRefs: List[CollectionReference] = list(ref.collections())
 
     for collRef in collRefs:
@@ -23,7 +23,8 @@ def exportdata(map: Dict[str, Any], ref: Union[Client, DocumentReference]):
         docs: List[DocumentSnapshot] = collRef.get()
         for doc in docs:
             dict = doc.to_dict()
-            dict['_id'] = doc.id
+            if not noid:
+                dict['_id'] = doc.id
             for k in dict.keys():
                 if type(dict[k]) == DatetimeWithNanoseconds:
                     dict[k] = datetime.fromtimestamp(dict[k].timestamp())
@@ -32,7 +33,7 @@ def exportdata(map: Dict[str, Any], ref: Union[Client, DocumentReference]):
             a = map[collRef.id][-1]
             if len(list(doc.reference.collections())) > 0:
                 a['_subcollections'] = {}
-                exportdata(a['_subcollections'], doc.reference)
+                exportdata(a['_subcollections'], doc.reference, noid)
 
 
         
@@ -108,6 +109,7 @@ def main():
     cmd.add_argument('service_file', help='google cloud service account .json file')
     cmd.add_argument('data_file', help='yaml data file for export or import')
     cmd.add_argument('-e', '--export', help='perform export, if not present - import will be performed', action='store_true')
+    cmd.add_argument('-n', '--noid', help='do not export document ids', action='store_true')
     # if len(sys.argv) == 1:
     #     args = vars(cmd.parse_args(
     #     ['D:\\Projects\\schoosch-8e6d4-firebase-adminsdk-qtszm-4352033692.json', 'd:\\Projects\\schoosch\data\people123.yml', '--export']))
@@ -122,7 +124,7 @@ def main():
 
     if args['export']:
         map: Dict[str, Any] = {}
-        exportdata(map, db)
+        exportdata(map, db, args['noid'])
         with open(args['data_file'], mode='w+', encoding='utf8') as export_file:
             yaml.dump(map, export_file, allow_unicode=True, indent=2)
     else:
