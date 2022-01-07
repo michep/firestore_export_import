@@ -1,21 +1,41 @@
+from datetime import datetime
+from google.cloud.firestore_v1.base_document import DocumentSnapshot
 from google.cloud.firestore_v1.base_query import BaseQuery
 from google.cloud.firestore_v1.collection import CollectionReference
+from google.cloud.firestore_v1.client import Client
+from google.cloud.firestore_v1.document import DocumentReference
+from google.api_core.datetime_helpers import DatetimeWithNanoseconds
+from firebase_admin import credentials
+from firebase_admin import firestore
+from typing import Any, List, Union, Dict
 import yaml
 import sys
 import argparse
-from typing import Any, List, Union, Dict
 
 import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import firestore
-from google.cloud.firestore_v1.client import Client
-from google.cloud.firestore_v1.document import DocumentReference
 
-def exportdata(db: Client, path: str) -> Dict[str, Any]:
-    res : Dict[str, Any] = {}
-    ref = db.document(path)
-    colls : List[CollectionReference] = ref.collections
+def exportdata(map: Dict[str, Any], ref: Union[Client, DocumentReference]):
+    collRefs: List[CollectionReference] = list(ref.collections())
 
+    for collRef in collRefs:
+        print(collRef.id)
+        map[collRef.id] = []
+        docs: List[DocumentSnapshot] = collRef.get()
+        for doc in docs:
+            dict = doc.to_dict()
+            dict['_id'] = doc.id
+            for k in dict.keys():
+                if type(dict[k]) == DatetimeWithNanoseconds:
+                    dict[k] = datetime.fromtimestamp(dict[k].timestamp())
+            print(dict)
+            map[collRef.id].append(dict)
+            a = map[collRef.id][-1]
+            if len(list(doc.reference.collections())) > 0:
+                a['_subcollections'] = {}
+                exportdata(a['_subcollections'], doc.reference)
+
+
+        
 
 def searchquery(search: str, db: Client):
     path = search.split('/')
@@ -40,7 +60,7 @@ def searchquery(search: str, db: Client):
     return doc_ref.id if field == '_id' else doc_ref._data[field]
 
 
-def processdata(doc: Dict[str, Any], ref: Union[Client, DocumentReference]):
+def importdata(doc: Dict[str, Any], ref: Union[Client, DocumentReference]):
     db: Client = ref if type(ref) == Client else ref._client
 
     for coll in doc:
@@ -80,20 +100,19 @@ def processdata(doc: Dict[str, Any], ref: Union[Client, DocumentReference]):
                 print('add ', dd)
 
             if subdoc:
-                processdata(subdoc, docref)
+                importdata(subdoc, docref)
 
 
 def main():
-    cmd = argparse.ArgumentParser('Import yaml data into Firestore database')
-    cmd.add_argument(
-        'service_file', help='google cloud service account credentials .json file')
-    cmd.add_argument('data_file', help='yaml data file for import or export')
-#    cmd.add_argument('--export', help='perform export, if not present - import will be performed')
-    if len(sys.argv) == 1:
-        args = vars(cmd.parse_args(
-        ['D:\\Projects\\schoosch-8e6d4-firebase-adminsdk-qtszm-5fcb843461.json', 'd:\\Projects\\schoosch\data\people.yml']))
-    else:
-        args = vars(cmd.parse_args())
+    cmd = argparse.ArgumentParser('Firestore database export and import')
+    cmd.add_argument('service_file', help='google cloud service account .json file')
+    cmd.add_argument('data_file', help='yaml data file for export or import')
+    cmd.add_argument('-e', '--export', help='perform export, if not present - import will be performed', action='store_true')
+    # if len(sys.argv) == 1:
+    #     args = vars(cmd.parse_args(
+    #     ['D:\\Projects\\schoosch-8e6d4-firebase-adminsdk-qtszm-4352033692.json', 'd:\\Projects\\schoosch\data\people123.yml', '--export']))
+    # else:
+    args = vars(cmd.parse_args())
 
     cred = credentials.Certificate(args['service_file'])
     firebase_admin.initialize_app(cred)
@@ -101,17 +120,15 @@ def main():
 
     db: Client = firestore.client()
 
-    with open(args['data_file'], encoding='utf8') as data_file:
-#        if args['--export']:
-#            export = exportdata(db)
-#            file = open(data_file)
-#            yaml.dump(export, file)
-#            
-#        else:
-            doc: Dict[str, Any] = yaml.safe_load(data_file)
-
-    processdata(doc, db)
-
+    if args['export']:
+        map: Dict[str, Any] = {}
+        exportdata(map, db)
+        with open(args['data_file'], mode='w+', encoding='utf8') as export_file:
+            yaml.dump(map, export_file, allow_unicode=True, indent=2)
+    else:
+        with open(args['data_file'], mode='r', encoding='utf8') as import_file:
+            doc: Dict[str, Any] = yaml.safe_load(import_file)
+            importdata(doc, db)
 
 if __name__ == '__main__':
     sys.exit(main())
