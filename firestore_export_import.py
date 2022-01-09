@@ -110,17 +110,21 @@ def main():
     cmd.add_argument('data_file', help='yaml data file for export or import')
     cmd.add_argument('-e', '--export', help='perform export, if not present - import will be performed', action='store_true')
     cmd.add_argument('-n', '--noid', help='do not export document ids', action='store_true')
-    # if len(sys.argv) == 1:
-    #     args = vars(cmd.parse_args(
-    #     ['D:\\Projects\\schoosch-8e6d4-firebase-adminsdk-qtszm-4352033692.json', 'd:\\Projects\\schoosch\data\people123.yml', '--export']))
-    # else:
-    args = vars(cmd.parse_args())
+    cmd.add_argument('-p', '--path', help='initial path to start export or import into')
+
+    if len(sys.argv) == 1:
+        args = vars(cmd.parse_args(
+        ['D:\\Projects\\schoosch-8e6d4-firebase-adminsdk-qtszm-4352033692.json', 'd:\\Projects\\schoosch\data\people123.yml', '--export', '--path', 'institution/l7wAAoJOWsumDKFDqBCP/class/1cjpkJlRMWQgledj1brs']))
+    # args = vars(cmd.parse_args())
 
     cred = credentials.Certificate(args['service_file'])
     firebase_admin.initialize_app(cred)
 
 
     db: Client = firestore.client()
+
+    if args['path']:
+        db: DocumentReference = db.document(args['path'])
 
     if args['export']:
         map: Dict[str, Any] = {}
