@@ -48,15 +48,24 @@ def searchquery(search: str, db: Client):
     doc_ref: Union[Client, DocumentReference] = db
     for coll, query in zip(path[0::2], path[1::2]):
         bq : BaseQuery = None
-        for q in query.replace('[', '').replace(']', '').split('&&'):
-            f, v = q.split('=')            
-            bq = doc_ref.collection(coll).where(f, "==", v) if bq == None else bq.where(f, '==', v)
-        res = bq.get()
-        if len(res) > 0:
-            id = res[0].id
-            doc_ref = doc_ref.collection(coll).document(id)
+        if query[0] == '[' and query[-1] == ']':
+            for q in query.replace('[', '').replace(']', '').split('&&'):
+                f, v = q.split('=')
+                if v.startswith('num:'):
+                    v = int(v[4:])
+                bq = doc_ref.collection(coll).where(f, "==", v) if bq == None else bq.where(f, '==', v)
+            res = bq.get()
+            if len(res) > 0:
+                id = res[0].id
+                doc_ref = doc_ref.collection(coll).document(id).get()
+            else:
+                raise Exception('query result is empty', search)
         else:
-            raise Exception('query result is empty', search)
+            doc_ref = doc_ref.collection(coll).document(query).get()
+            if doc_ref._data is None:
+                raise Exception('document is empty', search)
+            doc_ref = doc_ref
+
 
     return doc_ref.id if field == '_id' else doc_ref._data[field]
 
@@ -113,9 +122,9 @@ def main():
     cmd.add_argument('-p', '--path', help='initial path to start export or import into')
 
     if len(sys.argv) == 1:
-        args = vars(cmd.parse_args(
-        ['D:\\Projects\\schoosch-8e6d4-firebase-adminsdk-qtszm-4352033692.json', 'd:\\Projects\\schoosch\data\people123.yml', '--export', '--path', 'institution/l7wAAoJOWsumDKFDqBCP/class/1cjpkJlRMWQgledj1brs']))
-    # args = vars(cmd.parse_args())
+        args = vars(cmd.parse_args(['D:\\Projects\\schoosch-8e6d4-firebase-adminsdk-qtszm-4352033692.json', 'example.yaml']))
+    else:
+        args = vars(cmd.parse_args())
 
     cred = credentials.Certificate(args['service_file'])
     firebase_admin.initialize_app(cred)
