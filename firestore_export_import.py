@@ -63,7 +63,7 @@ def searchquery(search: str, db: Client):
         else:
             doc_ref = doc_ref.collection(coll).document(query).get()
             if doc_ref._data is None:
-                raise Exception('document is empty', search)
+                raise Exception('document not found', search)
             doc_ref = doc_ref
 
 

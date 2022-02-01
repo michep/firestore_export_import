@@ -16,11 +16,11 @@ collection1:
       - value2
     timestamp_attr: 2021-08-18 08:32:04
     _subcollections: # _subcollections is used to define collections inside the document
-      somecollection:
+      somecollection: # name of subcollection
         - name: just a
         - name: simple
         - name: subcollection
-      anothercollection:
+      anothercollection: # another subcollection
         - _id: '123'
           value: another
         - _id: '234'
@@ -32,5 +32,5 @@ collection1:
 
 collection2:
   - pi: $query|/collection1/some_unique_key_value/[float_attr] # with $query it is possible to address fields values from another documents
-    exp: $query|/collection1/[str_attr=another string value]/[float_attr] # of even search by specifying query conditions
-    time: $query|/collection1/[int_attr=num:42]/[timestamp_attr] # of even search by specifying query conditions
+    exp: $query|/collection1/[str_attr=another string value]/[float_attr] # of even search for document with specifying query conditions
+    time: $query|/collection1/[int_attr=num:42]/[timestamp_attr] # with num: prefix it is possible to specify that quesry should search numeric value, not a string
