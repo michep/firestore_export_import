@@ -121,10 +121,7 @@ def main():
     cmd.add_argument('-n', '--noid', help='do not export document ids', action='store_true')
     cmd.add_argument('-p', '--path', help='initial path to start export or import into')
 
-    if len(sys.argv) == 1:
-        args = vars(cmd.parse_args(['D:\\Projects\\schoosch-8e6d4-firebase-adminsdk-qtszm-4352033692.json', 'example.yaml']))
-    else:
-        args = vars(cmd.parse_args())
+    args = vars(cmd.parse_args())
 
     cred = credentials.Certificate(args['service_file'])
     firebase_admin.initialize_app(cred)
