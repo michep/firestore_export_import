@@ -57,17 +57,17 @@ def searchquery(search: str, db: Client):
             res = bq.get()
             if len(res) > 0:
                 id = res[0].id
-                doc_ref = doc_ref.collection(coll).document(id).get()
+                doc_ref = doc_ref.collection(coll).document(id)
             else:
                 raise Exception('query result is empty', search)
         else:
-            doc_ref = doc_ref.collection(coll).document(query).get()
-            if doc_ref._data is None:
+            doc_ref = doc_ref.collection(coll).document(query)
+            if doc_ref.get()._data is None:
                 raise Exception('document not found', search)
             doc_ref = doc_ref
 
 
-    return doc_ref.id if field == '_id' else doc_ref._data[field]
+    return doc_ref.id if field == '_id' else doc_ref.get()._data[field]
 
 
 def importdata(doc: Dict[str, Any], ref: Union[Client, DocumentReference]):
