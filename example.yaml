@@ -1,5 +1,5 @@
 collection1:
-  - _id: some_unique_key_value # _id is a doucment id in firebase
+  - _id: some_unique_key_value # _id is a doucment id in firebase, if exists - document will be updated, if not - created
     str_attr: string value
     int_attr: 42
     float_attr: 3.1415926
@@ -31,6 +31,7 @@ collection1:
           value: document
 
 collection2:
-  - pi: $query|/collection1/some_unique_key_value/[float_attr] # with $query it is possible to address fields values from another documents
+  - _id: $query|/collection1/some_unique_key_value/[str_attr]
+    pi: $query|/collection1/some_unique_key_value/[float_attr] # with $query it is possible to address fields values from another documents
     exp: $query|/collection1/[str_attr=another string value]/[float_attr] # of even search for document with specifying query conditions
     time: $query|/collection1/[int_attr=num:42]/[timestamp_attr] # with num: prefix it is possible to specify that quesry should search numeric value, not a string
