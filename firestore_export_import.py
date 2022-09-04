@@ -53,6 +53,8 @@ def searchquery(search: str, db: Client):
                 f, v = q.split('=')
                 if v.startswith('num:'):
                     v = int(v[4:])
+                elif v.startswith('datetime:'):
+                    v = datetime.strptime(v[9:], '%Y-%m-%d %H:%M:%S')
                 bq = doc_ref.collection(coll).where(f, "==", v) if bq == None else bq.where(f, '==', v)
             res = bq.get()
             if len(res) > 0:
