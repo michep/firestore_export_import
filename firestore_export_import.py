@@ -39,7 +39,9 @@ def exportdata(map: Dict[str, Any], ref: Union[Client, DocumentReference], noid:
         
 
 def searchquery(search: str, db: Client):
+    search = search.replace('//', '^')
     path = search.split('/')
+    path = list(map(lambda v: v.replace('^', '/'), path))
     path.pop(0)
     field = path.pop(-1).replace('[', '').replace(']', '')
     if len(path) % 2 == 1:
