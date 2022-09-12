@@ -118,7 +118,7 @@ def importdata(doc: Dict[str, Any], ref: Union[Client, DocumentReference]):
 
 
 def main():
-    cmd = argparse.ArgumentParser('Firestore database export and import')
+    cmd = argparse.ArgumentParser(description='Firestore database export and import')
     cmd.add_argument('service_file', help='google cloud service account .json file')
     cmd.add_argument('data_file', help='yaml data file for export or import')
     cmd.add_argument('-e', '--export', help='perform export, if not present - import will be performed', action='store_true')
