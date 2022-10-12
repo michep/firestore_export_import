@@ -27,7 +27,7 @@ def exportdata(map: Dict[str, Any], ref: Union[Client, DocumentReference], noid:
                 dict['_id'] = doc.id
             for k in dict.keys():
                 if type(dict[k]) == DatetimeWithNanoseconds:
-                    dict[k] = datetime.fromtimestamp(dict[k].timestamp())
+                    dict[k] = datetime.fromtimestamp(dict[k].timestamp(), tz=dict[k].tzinfo)
             print(dict)
             map[collRef.id].append(dict)
             a = map[collRef.id][-1]

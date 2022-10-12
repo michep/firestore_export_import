@@ -25,14 +25,17 @@ def flatten(data: Dict[str, Any], res: Dict[str, Any], parentname: List[str], pa
                 sub = record.pop('_subcollections')
             for i in range(len(record)):
                 key: str = list(record.keys())[i]
-                if type(record[key]) == str and key.endswith('_id') and len(record[key]) == 20:
+                if type(record[key]) == str and len(record[key]) == 20 and (key.endswith('_id') or key.endswith('_by')):
                     record[key] = { '$oid': bson.ObjectId(bytes(record[key][:12], 'utf-8')) }
                 if type(record[key]) == list and key.endswith('_ids'):
                     for j in range(len(record[key])):
                         if type(record[key][j]) == str and len(record[key][j]) == 20:
                             record[key][j] = { '$oid': bson.ObjectId(bytes(record[key][j][:12], 'utf-8')) }
                 if type(record[key]) == datetime:
-                    record[key] = { '$date': record[key].isoformat() + '+03:00' }
+                    if record[key].isoformat()[11:19] == '00:00:00':
+                        record[key] = { '$date': record[key].isoformat()[:-6]+'+00:00' }
+                    else:
+                        record[key] = { '$date': record[key].isoformat()[:-6]+'-03:00' }
 
             res[coll].append(record)
             if len(sub) > 0:
